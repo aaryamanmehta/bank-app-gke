@@ -55,7 +55,7 @@ steps:
         set -euo pipefail
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-api:$SHORT_SHA"
         kubectl apply -n "${_NAMESPACE}" -f bank-api-gke/backend.yaml
-        kubectl set image -n "${_NAMESPACE}" deployment/bank-api-deployment bank-api="$IMAGE"
+        kubectl set image -n "${_NAMESPACE}" deployment/bank-api-deployment bank-api="$$IMAGE"
     volumes:
       - name: "kube"
         path: "/root/.kube"
