@@ -65,7 +65,3 @@ steps:
 
 images:
   - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-web:$SHORT_SHA"
-
-volumes:
-  - name: "kube"
-    path: "/root/.kube"
