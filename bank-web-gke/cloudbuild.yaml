@@ -15,7 +15,7 @@ substitutions:
   _CLUSTER_NAME: "bank-cluster"
   _CLUSTER_LOCATION: "us-east1"
   _NAMESPACE: "default"
-  _REACT_APP_API_URL: "/api/v1"
+  _REACT_APP_API_URL: "http://34.148.15.109/api/v1"
 
 steps:
   - id: "Build image"
