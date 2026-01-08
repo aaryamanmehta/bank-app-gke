@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-api-deployment
+  labels:
+    app: bank-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bank-api
+  template:
+    metadata:
+      labels:
+        app: bank-api
+    spec:
+      containers:
+        - name: bank-api
+          image: us-east1-docker.pkg.dev/bank-app-gke/bank-artifacts/bank-api:latest
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-api-service
+  labels:
+    app: bank-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: bank-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

@@ -1,0 +1,65 @@
+# Cloud Build for bank-api-gke
+# Builds + pushes the backend image to Artifact Registry and deploys to GKE.
+
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/657793449530-compute@developer.gserviceaccount.com
+
+timeout: "1200s"
+
+substitutions:
+  _AR_REGION: "us-east1"
+  _AR_REPO: "bank-artifacts"
+  _CLUSTER_NAME: "bank-cluster"
+  _CLUSTER_LOCATION: "us-east1"
+  _NAMESPACE: "default"
+
+steps:
+  - id: "Build image"
+    name: "gcr.io/cloud-builders/docker"
+    dir: "bank-api-gke"
+    args:
+      - "build"
+      - "-t"
+      - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-api:$SHORT_SHA"
+      - "."
+
+  - id: "Push image"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-api:$SHORT_SHA"
+
+  - id: "Get GKE credentials"
+    name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "container"
+      - "clusters"
+      - "get-credentials"
+      - "${_CLUSTER_NAME}"
+      - "--region"
+      - "${_CLUSTER_LOCATION}"
+      - "--project"
+      - "$PROJECT_ID"
+    volumes:
+      - name: "kube"
+        path: "/root/.kube"
+
+  - id: "Apply manifests + set image"
+    name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-api:$SHORT_SHA"
+        kubectl apply -n "${_NAMESPACE}" -f bank-api-gke/backend.yaml
+        kubectl set image -n "${_NAMESPACE}" deployment/bank-api-deployment bank-api="$IMAGE"
+    volumes:
+      - name: "kube"
+        path: "/root/.kube"
+
+images:
+  - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-api:$SHORT_SHA"
+
+volumes:
+  - name: "kube"
+    path: "/root/.kube"

@@ -1,0 +1,71 @@
+# Cloud Build for bank-web-gke
+# Builds + pushes the frontend image to Artifact Registry and deploys to GKE.
+# IMPORTANT: Uses the existing Dockerfile name: Dockerfile-before-https-first
+
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/657793449530-compute@developer.gserviceaccount.com
+
+timeout: "1200s"
+
+substitutions:
+  _AR_REGION: "us-east1"
+  _AR_REPO: "bank-artifacts"
+  _CLUSTER_NAME: "bank-cluster"
+  _CLUSTER_LOCATION: "us-east1"
+  _NAMESPACE: "default"
+  _REACT_APP_API_URL: "http://bank-api-service:80"
+
+steps:
+  - id: "Build image"
+    name: "gcr.io/cloud-builders/docker"
+    dir: "bank-web-gke"
+    args:
+      - "build"
+      - "-f"
+      - "Dockerfile-before-https-first"
+      - "--build-arg"
+      - "REACT_APP_API_URL=${_REACT_APP_API_URL}"
+      - "-t"
+      - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-web:$SHORT_SHA"
+      - "."
+
+  - id: "Push image"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-web:$SHORT_SHA"
+
+  - id: "Get GKE credentials"
+    name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "container"
+      - "clusters"
+      - "get-credentials"
+      - "${_CLUSTER_NAME}"
+      - "--region"
+      - "${_CLUSTER_LOCATION}"
+      - "--project"
+      - "$PROJECT_ID"
+    volumes:
+      - name: "kube"
+        path: "/root/.kube"
+
+  - id: "Apply manifests + set image"
+    name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-web:$SHORT_SHA"
+        kubectl apply -n "${_NAMESPACE}" -f bank-web-gke/frontend.yaml
+        kubectl set image -n "${_NAMESPACE}" deployment/bank-web-deployment bank-web="$IMAGE"
+    volumes:
+      - name: "kube"
+        path: "/root/.kube"
+
+images:
+  - "${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/bank-web:$SHORT_SHA"
+
+volumes:
+  - name: "kube"
+    path: "/root/.kube"
