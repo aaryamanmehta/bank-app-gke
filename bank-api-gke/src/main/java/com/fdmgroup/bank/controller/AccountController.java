@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
-@CrossOrigin(origins = "https://my-react-app-135897197036.us-central1.run.app", allowedHeaders = "*")
+@CrossOrigin(origins = "http://34.23.158.132", allowedHeaders = "*")
 public class AccountController
 {
 	private IAccountService service;
