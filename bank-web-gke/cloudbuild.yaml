@@ -1,7 +1,3 @@
-# Cloud Build for bank-web-gke
-# Builds + pushes the frontend image to Artifact Registry and deploys to GKE.
-# IMPORTANT: Uses the existing Dockerfile name: Dockerfile-before-https-first
-
 serviceAccount: projects/$PROJECT_ID/serviceAccounts/657793449530-compute@developer.gserviceaccount.com
 
 timeout: "1200s"

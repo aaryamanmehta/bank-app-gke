@@ -1,6 +1,3 @@
-# Cloud Build for bank-api-gke
-# Builds + pushes the backend image to Artifact Registry and deploys to GKE.
-
 serviceAccount: projects/$PROJECT_ID/serviceAccounts/657793449530-compute@developer.gserviceaccount.com
 
 timeout: "1200s"
